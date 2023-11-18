@@ -54,7 +54,7 @@ type TagProps = {
 function Tag(props: TagProps) {
 
   if (props.loading) return (
-    <div className="flex flex-row items-center justify-center gap-2 px-4 py-1 bg-purple-800 rounded-full animate-pulse">
+    <div className="flex flex-row items-center justify-center gap-2 px-4 py-1 bg-purple-100 rounded-full animate-pulse">
       <span className="h-5 w-12" />
     </div>
   );
