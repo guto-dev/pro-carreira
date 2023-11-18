@@ -14,7 +14,7 @@ export default function MyProfile2() {
   return (
     <>
       <Head>
-        <title>{user.data?.user.name || "Meu Perfil"}</title>
+        <title>{user.data?.user.name ?? "Meu Perfil"}</title>
         <meta name="description" content="My Profile" />
       </Head>
       <div className="flex flex-col items-center justify-start w-full min-h-screen bg-neutral-200">

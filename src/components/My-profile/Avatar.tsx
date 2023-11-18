@@ -16,7 +16,7 @@ export default function Avatar() {
   return (
     <div className="flex flex-col items-center justify-center w-full h-fit">
       <Image
-        src={user.data?.user.image || "/profile.png"}
+        src={user.data?.user.image ?? "/profile.png"}
         alt="Profile"
         width={256}
         height={256}
