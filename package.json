@@ -10,6 +10,7 @@
     "postinstall": "prisma generate",
     "lint": "next lint",
     "start": "next start",
+    "pgp": "prisma generate && prisma db push",
     "vercel-build": "prisma generate && prisma db push && next build"
   },
   "dependencies": {
