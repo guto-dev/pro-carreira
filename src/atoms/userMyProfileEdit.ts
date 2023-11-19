@@ -2,25 +2,19 @@
 import { atom } from "jotai";
 
 //* Interfaces imports
-import { User, Skill } from "@prisma/client";
+import type { UpdateUserProfile } from "~/schemas/user";
 
-type UserMyProfileEdit = {
-  user?: Omit<
-    User,
-    "role" | "id" | "email" | "emailVerified" | "image" | "status"
-  >;
-  skills?: Skill[];
-};
-
-const clearUserMyProfileEdit: UserMyProfileEdit = {
+const clearUserMyProfileEdit: UpdateUserProfile = {
   user: {
-    cpfcnpj: "",
     name: "",
-    info: "",
+    info: {
+      aboutMe: "",
+      experiences: "",
+    },
   },
   skills: [],
 };
 
-export const userMyProfileEdit = atom<UserMyProfileEdit>(
+export const userMyProfileEditAtom = atom<UpdateUserProfile>(
   clearUserMyProfileEdit,
 );

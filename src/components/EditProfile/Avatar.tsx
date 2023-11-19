@@ -14,7 +14,7 @@ export default function Avatar() {
   );
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-fit">
+    <div className="flex flex-col items-center justify-center w-fit h-fit overflow-hidden rounded-full">
       <Image
         src={user.data?.user.image ?? "/profile.png"}
         alt="Profile"
