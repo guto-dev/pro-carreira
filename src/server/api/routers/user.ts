@@ -1,5 +1,5 @@
 //* Libraries imports
-import { z } from "zod";
+import z from "zod";
 
 //* Local imports
 import {
@@ -123,5 +123,26 @@ export const userRouter = createTRPCRouter({
       );
 
       return updatedUser;
+    }),
+
+  searchUserBySkillName: publicProcedure
+    .input(z.object({ names: z.array(z.string()) }))
+    .query(async (resolve) => {
+      const users = await resolve.ctx.db.user.findMany({
+        where: {
+          skills: {
+            some: {
+              Skill: {
+                name: {
+                  in: resolve.input.names,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return users;
     }),
 });
