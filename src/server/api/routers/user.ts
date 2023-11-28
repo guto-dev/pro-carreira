@@ -1,11 +1,13 @@
 //* Libraries imports
-import { z } from "zod";
+import z from "zod";
 
+//* Local imports
 import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
+import { infoSchema, updateUserProfile } from "~/schemas/user";
 
 export const userRouter = createTRPCRouter({
   getUser: protectedProcedure.query(async (resolve) => {
@@ -43,32 +45,104 @@ export const userRouter = createTRPCRouter({
       return user;
     }),
 
-  // hello: publicProcedure
-  //   .input(z.object({ mensagem: z.string() }))
-  //   .query(({ input }) => {
-  //     return {
-  //       greeting: `Banana ${input.mensagem}`,
-  //     };
-  //   }),
-  // create: protectedProcedure
-  //   .input(z.object({ name: z.string().min(1) }))
-  //   .mutation(async ({ ctx, input }) => {
-  //     // simulate a slow db call
-  //     await new Promise((resolve) => setTimeout(resolve, 1000));
-  //     return ctx.db.post.create({
-  //       data: {
-  //         name: input.name,
-  //         createdBy: { connect: { id: ctx.session.user.id } },
-  //       },
-  //     });
-  //   }),
-  // getLatest: protectedProcedure.query(({ ctx }) => {
-  //   return ctx.db.post.findFirst({
-  //     orderBy: { createdAt: "desc" },
-  //     where: { createdBy: { id: ctx.session.user.id } },
-  //   });
-  // }),
-  // getSecretMessage: protectedProcedure.query(() => {
-  //   return "you can now see this secret message!";
-  // }),
+  updateUserProfile: protectedProcedure
+    .input(updateUserProfile)
+    .mutation(async (resolve) => {
+      const user = await resolve.ctx.db.user.findUnique({
+        where: { id: resolve.ctx.session.user.id },
+        include: { skills: true },
+      });
+
+      if (!user) throw new Error("User not found");
+
+      //* Update user
+      const updatedUser = await resolve.ctx.db.user.update({
+        where: { id: resolve.ctx.session.user.id },
+        data: {
+          name: resolve.input.user.name,
+          cpfcnpj: resolve.input.user.cpfcnpj,
+          info: resolve.input.user.info,
+        },
+      });
+
+      //* Update skills
+      const skills = resolve.input.skills;
+      if (!skills) return updatedUser;
+      const userSkills = user.skills;
+
+      //* Delete skills
+      const skillsToDelete = userSkills.filter((userSkill) => {
+        return !skills.some((skill) => skill.id === userSkill.skillId);
+      });
+
+      await resolve.ctx.db.userSkill.deleteMany({
+        where: {
+          userId: resolve.ctx.session.user.id,
+          skillId: {
+            in: skillsToDelete.map((skill) => skill.skillId),
+          },
+        },
+      });
+
+      //* Update skills
+      const skillsToUpdate = userSkills.filter((userSkill) => {
+        return skills.some((skill) => skill.id === userSkill.skillId);
+      });
+
+      await Promise.all(
+        skillsToUpdate.map(async (skill) => {
+          await resolve.ctx.db.userSkill.update({
+            where: {
+              userId_skillId: {
+                userId: resolve.ctx.session.user.id,
+                skillId: skill.skillId,
+              },
+            },
+            data: {
+              level: skills.find((s) => s.id === skill.skillId)?.level,
+            },
+          });
+        }),
+      );
+
+      //* Create skills
+      const skillsToCreate = skills.filter((skill) => {
+        return !userSkills.some((userSkill) => skill.id === userSkill.skillId);
+      });
+
+      await Promise.all(
+        skillsToCreate.map(async (skill) => {
+          await resolve.ctx.db.userSkill.create({
+            data: {
+              level: skill.level,
+              skillId: skill.id,
+              userId: resolve.ctx.session.user.id,
+            },
+          });
+        }),
+      );
+
+      return updatedUser;
+    }),
+
+  searchUserBySkillName: publicProcedure
+    .input(z.object({ names: z.array(z.string()) }))
+    .query(async (resolve) => {
+      const users = await resolve.ctx.db.user.findMany({
+        where: {
+          skills: {
+            some: {
+              Skill: {
+                name: {
+                  in: resolve.input.names,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return users;
+    }),
 });

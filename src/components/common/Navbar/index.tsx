@@ -1,5 +1,6 @@
 //* Libraries imports
 import Image from "next/image";
+import Link from "next/link";
 import { Question, UserCircle, ArrowSquareRight } from "@phosphor-icons/react";
 
 export default function Navbar() {
@@ -22,9 +23,9 @@ export default function Navbar() {
             </button>
           </li>
           <li className="flex flex-row items-center justify-center h-full">
-            <button>
+            <Link href="/my-profile/edit">
               <UserCircle />
-            </button>
+            </Link>
           </li>
           <li className="flex flex-row items-center justify-center h-full">
             <button>
